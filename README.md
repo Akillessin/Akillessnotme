@@ -1,69 +1,62 @@
 # Akillessnotme
 Not made by me
 // ==UserScript==
-// @name         Taming.io Auto Farm
+// @name         Taming.io Uncensor Chat
 // @namespace    http://tampermonkey.net/
-// @version      1.0
-// @description  Auto farm resources and use gapples in Taming.io
+// @version      0.9
+// @description  Uncensors selected words by the user.
 // @author       You
-// @match        https://taming.io/*
+// @match        https://taming.io/
+// @match        https://biologyclass.school/
+// @match        https://trymath.org/
+// @match        https://school-homework.com/
+// @match        https://tamming.io/
+// @match        https://mathcool.glitch.me/
+// @match        https://sandtimer.net/
+// @match        https://mynotetaking.com/
+// @icon         https://taming.io/img/creature/boss-grim-reaper-scythe-skin1.png
 // @grant        none
-// @downloadURL https://update.greasyfork.org/scripts/530005/Tamingio%20Auto%20Farm.user.js
-// @updateURL https://update.greasyfork.org/scripts/530005/Tamingio%20Auto%20Farm.meta.js
+// @downloadURL https://update.greasyfork.org/scripts/466952/Tamingio%20Uncensor%20Chat.user.js
+// @updateURL https://update.greasyfork.org/scripts/466952/Tamingio%20Uncensor%20Chat.meta.js
 // ==/UserScript==
 
-(function() {
-    'use strict';
+const selector = document.querySelector("input");
+const character = "‎";
+let censoredWords = [];
+let text;
 
-    console.log("Taming.io Auto Farm Script Loaded!");
-
-    let autoFarm = true; // Toggle auto-farming on/off
-    let autoHeal = true; // Toggle auto-healing using gapples
-
-    // Function to simulate key presses
-    function pressKey(key) {
-        document.dispatchEvent(new KeyboardEvent('keydown', { key: key }));
-        setTimeout(() => {
-            document.dispatchEvent(new KeyboardEvent('keyup', { key: key }));
-        }, 100); // Short delay
-    }
-
-    // Function to auto-farm
-    function startFarming() {
-        setInterval(() => {
-            if (autoFarm) {
-                pressKey("e"); // Press 'E' to hit trees, rocks, and collect items
-            }
-        }, 500); // Every 0.5 seconds
-    }
-
-    // Function to auto-heal when HP is low
-    function checkHealth() {
-        setInterval(() => {
-            let hpElement = document.querySelector("#health-bar"); // Check the health bar element
-            if (hpElement) {
-                let hp = parseInt(hpElement.style.width.replace("%", "")); // Get HP as a percentage
-                if (hp < 30 && autoHeal) { // If HP is below 30%, eat a gapple
-                    console.log("Low HP! Using Gapple...");
-                    pressKey("q"); // 'Q' is usually the key for consuming items
-                }
-            }
-        }, 1000); // Check every second
-    }
-
-    // Toggle Auto-Farming with "F" key
-    document.addEventListener("keydown", (event) => {
-        if (event.key === "f") {
-            autoFarm = !autoFarm;
-            console.log("Auto-Farming: " + (autoFarm ? "ON" : "OFF"));
-        }
-        if (event.key === "h") {
-            autoHeal = !autoHeal;
-            console.log("Auto-Heal: " + (autoHeal ? "ON" : "OFF"));
-        }
+selector.addEventListener("input", () => {
+    text = selector.value;
+    if (text.includes("/wl") || text.includes("/bl")) return;
+    censoredWords.forEach((word) => {
+        const regex = new RegExp(word, 'gi');
+        selector.value = selector.value.replace(regex, (match) => {
+            return match[0] + character + match.substring(1);
+        });
     });
+});
+selector.addEventListener("keyup", (event) => {
+    if (event.key === "Enter") {
+        let words = [];
 
-    // Start the auto-farming and healing functions
-    startFarming();
-    checkHealth();
-})();
+        if (text != undefined) words = text.split(" ");
+
+        let word;
+
+        if (words.includes("/wl")) {
+            word = words[words.indexOf("/wl") + 1];
+        } else if (words.includes("/bl")) {
+            word = words[words.indexOf("/bl") + 1]
+        } else {
+            return;
+        }
+
+        if (words.length > 1 && word != "") {
+            if (text.includes("/wl") && !censoredWords.includes(word)) {
+                censoredWords.push(word);
+            } else if (text.includes("/bl")) {
+                if (censoredWords.includes(word)) censoredWords.splice(censoredWords.indexOf(word), 1);
+            }
+        }
+    }
+});
